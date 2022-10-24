@@ -105,12 +105,12 @@ namespace Server
         private void ListView1_SelectedIndexChanged_UsingItems(object sender, System.EventArgs e)
         {
 
-            //ListView.SelectedListViewItemCollection breakfast =
-            //    this.lsvMessage.SelectedItems;
-            //foreach (ListViewItem item in breakfast)
-            //{
-            //    DownloadFile(item.Text);
-            //}
+            ListView.SelectedListViewItemCollection breakfast =
+                this.listView2.SelectedItems;
+            foreach (ListViewItem item in breakfast)
+            {
+                DownloadFile(item.Text);
+            }
         }
 
         //nhận tin
@@ -174,7 +174,7 @@ namespace Server
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
             }
         }
 
@@ -188,10 +188,7 @@ namespace Server
             }
 
             var listViewItem = new ListViewItem(s);
-            Button bt = new Button();
-            bt.Text = "abcd";
-            flpMessage.Controls.Add(bt);
-
+            listView2.Items.Add(listViewItem);
         }
         //phân mảnh data -> byte
         byte[] Serialize(object obj)
@@ -234,9 +231,11 @@ namespace Server
             COMMON.COMMON common = new COMMON.COMMON("LOGOUT", jsonString);
             sendJson(client, common);
             this.Hide();
-            LoginForm login = new LoginForm();
-            login.ShowDialog();
+            login= false;
+            LoginForm loginForm = new LoginForm();
+            loginForm.ShowDialog();
             this.Close();
+
         }
 
         private void UploadFile(object sender, EventArgs e)

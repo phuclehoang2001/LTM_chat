@@ -233,16 +233,20 @@ namespace Client
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
  
             }
         }
 
         private void btnRegister_Click(object sender, EventArgs e)
         {
-            register = new Thread(new ThreadStart(this.ThreadRegister));
-            register.IsBackground = true;
-            register.Start();
+            IP = new IPEndPoint(IPAddress.Parse(IPServer.Text), int.Parse(Port.Text));
+            client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            client.Connect(IP);
+            ThreadRegister();
+            //register = new Thread(new ThreadStart(this.ThreadRegister));
+            //register.IsBackground = true;
+            //register.Start();
         }
     }
 }
