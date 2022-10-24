@@ -24,6 +24,7 @@ using Client;
 using Server;
 using Client.Properties;
 
+
 namespace Server
 {
     public partial class MainForm : Form
@@ -31,24 +32,24 @@ namespace Server
         Socket client;
         bool login;
         private string username;
-        private string receiver="";
+        private string receiver = "";
         Thread mainThread;
-        
+
         public MainForm(string username, Socket client)
         {
             InitializeComponent();
-            this.username = username;           
+            this.username = username;
             this.login = true;
             this.client = client;
         }
-        public void ChangeAttribute(Label label, string username,string sub)
+        public void ChangeAttribute(Label label, string username, string sub)
         {
             label.BeginInvoke(new MethodInvoker(() =>
             {
                 label.Text = sub + username;
             }));
         }
-      
+
         private void client_Load(object sender, EventArgs e)
         {
             for (int i = 1; i < 5; i++)
@@ -56,8 +57,8 @@ namespace Server
                 ItemClient client = new ItemClient
                 {
                     Socket = null,
-                    ClientName = "user"+i,
-                    ClientIP = "ip"+i,
+                    ClientName = "user" + i,
+                    ClientIP = "ip" + i,
                     ClientImg = Resources.programmer,
                     Status = true
                 };
@@ -78,8 +79,8 @@ namespace Server
                 flpUsers.Invoke((MethodInvoker)(() => flpGroups.Controls.Add(group)));
             }
 
-            ChangeAttribute(lbWelcome, this.username,"Hello ");
-            mainThread = new Thread(new ThreadStart(this.ThreadTask));           
+            ChangeAttribute(lbWelcome, this.username, "Hello ");
+            mainThread = new Thread(new ThreadStart(this.ThreadTask));
             mainThread.IsBackground = true;
             mainThread.Start();
         }
@@ -90,7 +91,7 @@ namespace Server
             if (this.username.Equals(item.ClientName))
                 return;
             this.receiver = item.ClientName;
-            ChangeAttribute(lbReceiver, this.receiver,"Send to ");
+            ChangeAttribute(lbReceiver, this.receiver, "Send to ");
         }
 
         private void sendJson(Socket client, object obj)
@@ -115,14 +116,14 @@ namespace Server
         //nhận tin
         private void ThreadTask()
         {
-            byte[] data = new byte[1024*10000];
+            byte[] data = new byte[1024 * 10000];
             try
             {
                 while (login)
                 {
-                    data = new byte[1024*10000];
+                    data = new byte[1024 * 10000];
                     int recv = client.Receive(data);
-                    string jsonString = Encoding.ASCII.GetString(data, 0, recv);         
+                    string jsonString = Encoding.ASCII.GetString(data, 0, recv);
                     jsonString = jsonString.Replace("\0", "");
                     COMMON.COMMON com = JsonSerializer.Deserialize<COMMON.COMMON>(jsonString);
                     if (com != null)
@@ -135,7 +136,7 @@ namespace Server
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
-                                AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " (me) >> " +mes.Content);
+                                AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " (me) >> " + mes.Content);
                                 break;
                             ////////////////////////////////////////Thêm case
                             case "UploadFile":
@@ -163,7 +164,7 @@ namespace Server
                                 break;
                             default:
                                 break;
-                            
+
                         }
 
                     }
@@ -212,7 +213,7 @@ namespace Server
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
         }
 
 
@@ -258,7 +259,7 @@ namespace Server
             MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver, fi.Name, fi.DirectoryName, clientData);
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
-            sendJson(client,common);
+            sendJson(client, common);
 
         }
 
@@ -284,8 +285,9 @@ namespace Server
             login = false;
         }
 
-        private void showUsers(FlowLayoutPanel panel) { 
-            if(panel.Visible == false)
+        private void showUsers(FlowLayoutPanel panel)
+        {
+            if (panel.Visible == false)
             {
                 panel.Visible = true;
             }
@@ -304,6 +306,28 @@ namespace Server
         {
             showUsers(flpGroups);
         }
-       
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            System.Windows.Forms.ListView.SelectedListViewItemCollection icons =
+        this.listView1.SelectedItems;
+
+            string icon="";
+            foreach (ListViewItem item in icons)
+            {
+                icon += item.Text;
+            }
+
+            // Output the price to TextBox1.
+            txbMessage.Text += icon;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if(listView1.Visible==false)
+                listView1.Visible = true;
+            else if(listView1.Visible == true)
+                listView1.Visible = false;
+        }
     }
 }

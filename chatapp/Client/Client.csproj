@@ -76,6 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FullEmojiList.cs" />
     <Compile Include="ItemMessage.cs">
       <SubType>UserControl</SubType>
     </Compile>
