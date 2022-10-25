@@ -25,6 +25,7 @@ namespace Client
         IPEndPoint IP;
         Socket client;
         Thread register;
+        //Thread receive;
         bool login = false;
         public LoginForm()
         {
@@ -61,7 +62,7 @@ namespace Client
         void Connect()
         {
             if (IPServer.Text == string.Empty || login == true)
-                return; 
+                return;
             //IP: địa chỉ của server
             IP = new IPEndPoint(IPAddress.Parse(IPServer.Text), int.Parse(Port.Text));
             client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -124,6 +125,7 @@ namespace Client
                         MessageBox.Show("Đăng nhập thất bại");
                     }
                 }
+                
             } catch (Exception e)
             {
                 MessageBox.Show(e.Message);

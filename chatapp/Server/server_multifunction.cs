@@ -180,8 +180,8 @@ namespace Server
                                 }
                             }
                             break;                 
-                        default:
-                            break;
+                        //default:
+                        //    break;
                     }
                 } else
                 {
@@ -205,6 +205,39 @@ namespace Server
                     {
                         switch (com.kind)
                         {
+                            case "LOGIN":
+                                MESSAGE.LOGIN login = JsonSerializer.Deserialize<LOGIN>(com.content);
+                                if (login != null && login.username != null && login.password != null
+                                    && ListAccount.Keys.Contains(login.username)
+                                    && login.password.Equals(ListAccount[login.username]))
+                                {
+
+                                    com = new COMMON.COMMON("REPLY", "OK");
+                                    sendJson(socket, com);
+                                    ItemClient client = new ItemClient
+                                    {
+                                        Socket = socket,
+                                        ClientName = login.username,
+                                        ClientIP = socket.RemoteEndPoint.ToString(),
+                                        ClientImg = Resources.programmer,
+                                        Status = true
+                                    };
+                                    // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
+                                    flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
+                                    AddMessage("\t\t\tClient " + client.ClientName + " đã tham gia");
+                                    // thêm vào list
+                                    //ListClient.Remove(login.username);
+                                    ListClient.Add(login.username, client);
+                                    ///Thêm vào datasource
+                                    cbSelectToSend.DataSource = new BindingSource(ListClient, null);
+                                }
+                                else
+                                {
+                                    com = new COMMON.COMMON("REPLY", "CANCEL");
+                                    sendJson(socket, com);
+                                    return;
+                                }
+                                break;
                             case "LOGOUT":
                                 MESSAGE.LOGOUT logout = JsonSerializer.Deserialize<MESSAGE.LOGOUT>(com.content);
                                 flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Remove(ListClient[logout.username])));
