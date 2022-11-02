@@ -73,14 +73,16 @@ namespace MESSAGE
     }
     public class FILE
     {
-        public FILE(string usernameSender, string usernameReceiver, string fname, string path, byte[] data)
+        public FILE(string usernameSender, string usernameReceiver,string fullname, string fname, string path, byte[] data)
         {
             this.usernameSender = usernameSender;
             this.usernameReceiver = usernameReceiver;
+            this.fullname = fullname;
             this.fname = fname;
             this.path = path;
             this.data = data;
         }
+        public string fullname { get; set; }
         public string usernameSender { get; set; }
         public string usernameReceiver { get; set; }
         public string fname { get; set; }
