@@ -121,7 +121,6 @@ namespace Server
             {
                 while (login)
                 {
-                    data = new byte[1024 * 10000];
                     int recv = client.Receive(data);
                     string jsonString = Encoding.ASCII.GetString(data, 0, recv);
                     jsonString = jsonString.Replace("\0", "");
@@ -214,6 +213,7 @@ namespace Server
         }
 
 
+
         private void btnSend_Click(object sender, EventArgs e)
         {
             if (this.receiver == string.Empty || txbMessage.Text == string.Empty) return;
@@ -230,13 +230,10 @@ namespace Server
             string jsonString = JsonSerializer.Serialize(logout);
             COMMON.COMMON common = new COMMON.COMMON("LOGOUT", jsonString);
             sendJson(client, common);
-            this.Hide();
             login= false;
-            LoginForm loginForm = new LoginForm();
-            loginForm.ShowDialog();
             this.Close();
-
         }
+
 
         private void UploadFile(object sender, EventArgs e)
         {
@@ -275,7 +272,11 @@ namespace Server
             try
             {
                 if (mainThread != null)
-                    mainThread.Abort();
+                {
+                    //mainThread.Abort();
+                    Application.Exit();
+                }
+                    
             }
             catch (Exception error)
             {

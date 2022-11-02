@@ -115,10 +115,9 @@ namespace Client
                     {
                         MessageBox.Show("Đăng nhập thành công");
                         this.login = true;
-                        this.Hide(); // ẩn form login
-                        MainForm form = new MainForm(username.Text, client);
-                        form.ShowDialog();
-                        this.Close();
+                        Thread t = new Thread(OpenMainForm);
+                        t.Start();
+                      
                     }
                     else 
                     {
@@ -133,30 +132,6 @@ namespace Client
                 client.Close();
             }
             
-        }
-
-        
-
-
-
-        //phân mảnh
-        byte[] Serialize(object obj)
-        {
-            MemoryStream stream = new MemoryStream();
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            formatter.Serialize(stream, obj);
-            
-            return stream.ToArray();
-        }
-
-        //gom mảnh lại
-        object Deserialize(byte[] data)
-        {
-            MemoryStream stream = new MemoryStream(data);
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            return formatter.Deserialize(stream);
         }
 
         //Đóng kết nối khi đóng form
@@ -203,6 +178,15 @@ namespace Client
         private void LoginForm_FormClosing(object sender, FormClosingEventArgs e)
         {
     
+        }
+
+
+        private void OpenMainForm()
+        {
+            this.Hide();
+            MainForm newForm = new MainForm(username.Text, client);
+            newForm.ShowDialog();
+            
         }
 
         private void ThreadRegister()

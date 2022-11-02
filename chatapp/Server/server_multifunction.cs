@@ -245,7 +245,6 @@ namespace Server
                                 ListClient[logout.username].Socket.Close();
                                 ListClient.Remove(logout.username);
                                 cbSelectToSend.DataSource = new BindingSource(ListClient, null);
-                                wait = false;
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
