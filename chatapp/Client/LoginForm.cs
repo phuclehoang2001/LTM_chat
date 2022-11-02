@@ -116,6 +116,7 @@ namespace Client
                         MessageBox.Show("Đăng nhập thành công");
                         this.login = true;
                         Thread t = new Thread(OpenMainForm);
+                        t.SetApartmentState(ApartmentState.STA);
                         t.Start();
                       
                     }
@@ -148,6 +149,7 @@ namespace Client
             receive.SetApartmentState(ApartmentState.STA);
             receive.Start();
             receive.Join();
+
         }
 
         private void label2_Click(object sender, EventArgs e)

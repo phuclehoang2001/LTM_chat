@@ -239,6 +239,7 @@ namespace Server
         {
             OpenFileDialog ofd = new OpenFileDialog() { Multiselect = true, ValidateNames = true, Filter = "All Files|*.*" };
             ofd.ShowDialog();
+            
             FileInfo fi = new FileInfo(ofd.FileName);
             //AppendTextBox(fi.Name);
 
@@ -256,9 +257,10 @@ namespace Server
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
             sendJson(client, common);
-
         }
 
+
+        
         private void DownloadFile(string fname)
         {
             MESSAGE.DOWNFILE mes = new MESSAGE.DOWNFILE(this.username, this.receiver, fname);
