@@ -271,7 +271,11 @@ namespace Server
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
                                             string[] duoihinh = {".jpeg",".jpg",".pnj",".gif"};
+<<<<<<< Updated upstream
                                             if(file.fullname.Contains(duoihinh))
+=======
+                                            //if(file.fullname.Contains(duoihinh))
+>>>>>>> Stashed changes
                                             AddMessage(file.usernameSender + " to " + file.usernameReceiver + " >> " + file.fname + Environment.NewLine);
                                             Socket friend = ListClient[file.usernameReceiver].Socket;
                                             friend.Send(data, recv, SocketFlags.None);

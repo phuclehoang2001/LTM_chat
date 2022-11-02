@@ -252,7 +252,7 @@ namespace Server
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
 
-            MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver, fi.Name, fi.DirectoryName, clientData);
+            MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver,fi.FullName, fi.Name, fi.DirectoryName, clientData);
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
             sendJson(client, common);
