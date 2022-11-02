@@ -245,6 +245,7 @@ namespace Server
                                 ListClient[logout.username].Socket.Close();
                                 ListClient.Remove(logout.username);
                                 cbSelectToSend.DataSource = new BindingSource(ListClient, null);
+                                wait = false;
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
@@ -269,6 +270,8 @@ namespace Server
                                     {
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
+                                            string[] duoihinh = {".jpeg",".jpg",".pnj",".gif"};
+                                            if(file.fullname.Contains(duoihinh))
                                             AddMessage(file.usernameSender + " to " + file.usernameReceiver + " >> " + file.fname + Environment.NewLine);
                                             Socket friend = ListClient[file.usernameReceiver].Socket;
                                             friend.Send(data, recv, SocketFlags.None);
@@ -307,7 +310,7 @@ namespace Server
                                     fileNameByte.CopyTo(clientData, 4);
                                     fileData.CopyTo(clientData, 4 + fileNameByte.Length);
 
-                                    MESSAGE.FILE df = new MESSAGE.FILE(dfile.usernameSender, dfile.usernameReceiver, dfile.fname, @"D:\C free\", clientData);
+                                    MESSAGE.FILE df = new MESSAGE.FILE(dfile.usernameSender, dfile.usernameReceiver, @"D:\C free\" + dfile.fname, dfile.fname, @"D:\C free\", clientData);
                                     string jsonStringFile = JsonSerializer.Serialize(df);
                                     COMMON.COMMON common = new COMMON.COMMON("DownLoadFile", jsonStringFile);
                                     sendJson(socket, common);
