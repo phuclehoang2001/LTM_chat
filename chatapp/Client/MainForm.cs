@@ -23,6 +23,7 @@ using COMMON;
 using Client;
 using Server;
 using Client.Properties;
+using System.Xml.Linq;
 
 
 namespace Server
@@ -33,53 +34,62 @@ namespace Server
         bool login;
         private string username;
         private string receiver = "";
+        private string groupRecevier = "";
+        private List<string> users;
+        private Dictionary<string, List<string>> groups;
         Thread mainThread;
-
-        public MainForm(string username, Socket client)
+        //bug: login more 2 time, logout remove UI server, update list_user when register
+        public MainForm(MESSAGE.INITDATA data,Socket socket)
         {
             InitializeComponent();
-            this.username = username;
+            this.username = data.username;
+            this.client = socket;
+            this.users = data.users;
+            this.groups = data.groups;
             this.login = true;
-            this.client = client;
         }
-        public void ChangeAttribute(Label label, string username, string sub)
+        public void ChangeAttribute(Label label, string information)
         {
             label.BeginInvoke(new MethodInvoker(() =>
             {
-                label.Text = sub + username;
+                label.Text = information;
             }));
         }
 
         private void client_Load(object sender, EventArgs e)
         {
-            for (int i = 1; i < 5; i++)
+            foreach (string username in users)
             {
-                ItemClient client = new ItemClient
+                if (!username.Equals(this.username) && !username.Equals("Tất cả"))
                 {
-                    Socket = null,
-                    ClientName = "user" + i,
-                    ClientIP = "ip" + i,
-                    ClientImg = Resources.programmer,
-                    Status = true
-                };
-                flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
-                client.ItemClick += Client_ItemClick;
+                    ItemClient client = new ItemClient
+                    {
+                        Socket = null,
+                        ClientName = username,
+                        ClientImg = Resources.programmer,
+                        Status = true
+                    };
+                    flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
+                    client.ItemClick += Client_ItemClick;
+                }
+            }
+            if (groups.Count > 0)
+            {
+                foreach (KeyValuePair<string, List<string>> item in groups)
+                {
+                    ItemGroup itemGroup = new ItemGroup
+                    {
+                        GroupName = item.Key,
+                        GroupImg = Resources.group_chat,
+                        Members = item.Value,
+                        Status = true
+                    };
+                    flpUsers.Invoke((MethodInvoker)(() => flpGroups.Controls.Add(itemGroup)));
+                    itemGroup.ItemClick += Group_ItemClick;
+                }
             }
 
-            for (int i = 1; i < 5; i++)
-            {
-                ItemClient group = new ItemClient
-                {
-                    Socket = null,
-                    ClientName = "group" + i,
-                    ClientIP = "..." + i,
-                    ClientImg = Resources.programmer,
-                    Status = true
-                };
-                flpUsers.Invoke((MethodInvoker)(() => flpGroups.Controls.Add(group)));
-            }
-
-            ChangeAttribute(lbWelcome, this.username, "Hello ");
+            ChangeAttribute(lbWelcome,  "Hello " + this.username);
             mainThread = new Thread(new ThreadStart(this.ThreadTask));
             mainThread.IsBackground = true;
             mainThread.Start();
@@ -91,7 +101,16 @@ namespace Server
             if (this.username.Equals(item.ClientName))
                 return;
             this.receiver = item.ClientName;
-            ChangeAttribute(lbReceiver, this.receiver, "Send to ");
+            this.groupRecevier = "";
+            ChangeAttribute(lbReceiver, "Send to <user>: "+ this.receiver  );
+        }
+
+        private void Group_ItemClick(object sender, EventArgs e)
+        {
+            ItemGroup item = sender as ItemGroup;
+            this.groupRecevier = item.GroupName;
+            this.receiver = "";
+            ChangeAttribute(lbReceiver, "Send to <group>: " + this.groupRecevier);
         }
 
         private void sendJson(Socket client, object obj)
@@ -135,9 +154,14 @@ namespace Server
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
-                                AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " (me) >> " + mes.Content);
+                                if (mes.UsernameReceiver != this.username)
+                                {
+                                    AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " <group>: " + mes.Content);
+                                } else
+                                {
+                                    AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " <me>: " + mes.Content);
+                                }
                                 break;
-                            ////////////////////////////////////////Thêm case
                             case "UploadFile":
                                 MESSAGE.FILE ufile = JsonSerializer.Deserialize<MESSAGE.FILE>(com.content);
                                 AddMessage(ufile.fname);
@@ -159,6 +183,39 @@ namespace Server
                                 catch
                                 {
 
+                                }
+                                break;
+                            case "CheckUser":
+                                
+                                if (com.content == null)
+                                {
+                                    MessageBox.Show("Username không tồn tại hoặc không chính xác");    
+                                }
+                                else
+                                {
+                                    MESSAGE.CHECKUSER check = JsonSerializer.Deserialize<MESSAGE.CHECKUSER>(com.content);
+                                    AddUser(check.username);          
+                                }
+                                break;
+                            case "ADDGROUP":
+
+                                if (com.content == null)
+                                {
+                                    MessageBox.Show("Nhóm đã tồn tại, tạo thất bại!");
+                                }
+                                else
+                                {
+                                    MESSAGE.ADDGROUP group = JsonSerializer.Deserialize<MESSAGE.ADDGROUP>(com.content);
+                                    ItemGroup itemGroup = new ItemGroup
+                                    {
+                                        GroupName = group.groupName,
+                                        GroupImg = Resources.group_chat,
+                                        Members = group.members,
+                                        Status = true
+                                    };
+                                    itemGroup.ItemClick += Group_ItemClick;
+                                    flpUsers.Invoke((MethodInvoker)(() => flpGroups.Controls.Add(itemGroup)));
+                            
                                 }
                                 break;
                             default:
@@ -216,12 +273,21 @@ namespace Server
 
         private void btnSend_Click(object sender, EventArgs e)
         {
-            if (this.receiver == string.Empty || txbMessage.Text == string.Empty) return;
-            MESSAGE.MESSAGE mes = new MESSAGE.MESSAGE(this.username, this.receiver, txbMessage.Text);
-            string jsonString = JsonSerializer.Serialize(mes);
-            COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
-            sendJson(client, common);
-            AddMessage(this.username + " to " + receiver + " >> " + txbMessage.Text);
+            if (txbMessage.Text == string.Empty) return;
+            if (this.receiver != "")
+            {
+                MESSAGE.MESSAGE mes = new MESSAGE.MESSAGE(this.username, this.receiver, txbMessage.Text);
+                string jsonString = JsonSerializer.Serialize(mes);
+                COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
+                sendJson(client, common);
+                AddMessage(this.username + " to " + receiver + " >> " + txbMessage.Text);
+            } else if(this.groupRecevier != "")
+            {
+                MESSAGE.MESSAGE mes = new MESSAGE.MESSAGE(this.username, this.groupRecevier, txbMessage.Text);
+                string jsonString = JsonSerializer.Serialize(mes);
+                COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
+                sendJson(client, common);
+            }     
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -271,11 +337,11 @@ namespace Server
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            
             try
             {
                 if (mainThread != null)
                 {
-                    //mainThread.Abort();
                     Application.Exit();
                 }
                     
@@ -330,6 +396,93 @@ namespace Server
                 listView1.Visible = true;
             else if(listView1.Visible == true)
                 listView1.Visible = false;
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listUserGroup_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+
+        }
+
+        void AddUser(string userName)
+        {
+            if (InvokeRequired)
+            {
+                try { this.Invoke(new Action<string>(AddUser), new object[] { userName }); }
+                catch (Exception) { }
+                return;
+            }
+
+            var listViewItem = new ListViewItem(userName);
+            listUserGroup.Items.Add(listViewItem);
+
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            string userName = inputName.Text;
+            if (userName == this.username) return;
+            for (int i = 0; i < listUserGroup.Items.Count; i++)
+            {
+                if (userName.Equals(listUserGroup.Items[i].Text))
+                {
+                    MessageBox.Show("Đã thêm " + userName + " !");
+                    return;
+                }         
+            }
+            MESSAGE.CHECKUSER check = new MESSAGE.CHECKUSER(userName);
+            string jsonString = JsonSerializer.Serialize(check);
+            COMMON.COMMON common = new COMMON.COMMON("CheckUser", jsonString);
+            sendJson(client, common);
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string groupName = GroupName.Text;
+            if (GroupName.Text == "")
+            {
+                MessageBox.Show("Hãy nhập tên nhóm!");
+                return;
+            }
+            if(listUserGroup.Items.Count <2)
+            {
+                MessageBox.Show("Thêm ít nhất 2 thành viên để tạo nhóm");
+            } else
+            {
+                List<string> members = new List<string>();
+                for(int i = 0; i< listUserGroup.Items.Count; i++)
+                {
+                    members.Add(listUserGroup.Items[i].Text);
+                }
+                members.Add(this.username);
+
+                MESSAGE.ADDGROUP newGroup = new MESSAGE.ADDGROUP(groupName, members);
+                string jsonString = JsonSerializer.Serialize(newGroup);
+                COMMON.COMMON common = new COMMON.COMMON("ADDGROUP", jsonString);
+                sendJson(client, common);       
+            }
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            listUserGroup.Invoke((MethodInvoker)(() => listUserGroup.Items.Clear()));
+            GroupName.Text = "";
+            inputName.Text = "";
+
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            login = false;
+            MESSAGE.LOGOUT logout = new MESSAGE.LOGOUT(this.username);
+            string jsonString = JsonSerializer.Serialize(logout);
+            COMMON.COMMON common = new COMMON.COMMON("LOGOUT", jsonString);
+            sendJson(client, common);         
         }
     }
 }

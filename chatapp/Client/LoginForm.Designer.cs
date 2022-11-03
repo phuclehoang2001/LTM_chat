@@ -58,7 +58,7 @@
             this.IPServer.Name = "IPServer";
             this.IPServer.Size = new System.Drawing.Size(307, 30);
             this.IPServer.TabIndex = 4;
-            this.IPServer.Text = "192.168.40.1";
+            this.IPServer.Text = "169.254.232.78";
             // 
             // btnLogin
             // 
@@ -78,7 +78,7 @@
             this.username.Name = "username";
             this.username.Size = new System.Drawing.Size(307, 30);
             this.username.TabIndex = 6;
-            this.username.Text = "user11";
+            this.username.Text = "user1";
             // 
             // password
             // 

@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MESSAGE;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace Server
 {
@@ -27,8 +28,8 @@ namespace Server
         Socket server;
         Dictionary<string, string> ListAccount;// username, pass
         Dictionary<string, ItemClient> ListClient;// username, viewcontrol (infor_user: ava,socket,fullname...)
-        Dictionary<string, List<string>> ListGroup;// groupname, listusername
-        bool active = false;
+        Dictionary<string, List<string>> ListGroup;// groupname, members
+        
         private const int PORT_NUMBER = 2008;
         
         public server_multifunction()
@@ -39,9 +40,17 @@ namespace Server
         private void CreateUsers()
         {
             ListAccount = new Dictionary<string, string>();
-            ListGroup = new Dictionary<string, List<string>>();
-            for (int i = 0; i < 9; i++) 
+            for (int i = 0; i < 9; i++)
                 ListAccount.Add("user" + i.ToString(), "123");
+
+            // tạo group với groupname: groupdemo, members: user1,user2,user3
+            ListGroup = new Dictionary<string, List<string>>();
+            ListGroup.Add("groupdemo", new List<string>
+            {
+                ListAccount.ElementAt(1).Key, 
+                ListAccount.ElementAt(2).Key,
+                ListAccount.ElementAt(3).Key,
+            });
         }
         // Thiết lập ip từ máy chủ hiện tại khi load form
         private void server_multifunction_Load(object sender, EventArgs e)
@@ -114,130 +123,124 @@ namespace Server
             client.Send(jsonUtf8Bytes, jsonUtf8Bytes.Length, SocketFlags.None);
         }
 
+        
 
         //nhận tin
         void ThreadReceive(object obj)
         {
-            Socket socket = obj as Socket;     
-            byte[] data = new byte[1024*10000];
-            int recv = socket.Receive(data);
-            if (recv == 0) return;
-            string jsonString = Encoding.ASCII.GetString(data, 0, recv);
-            COMMON.COMMON  com = JsonSerializer.Deserialize<COMMON.COMMON>(jsonString);
-            if (com != null)
-            {
-                if (com.content != null)
-                {
-                    switch (com.kind)
-                    {
-                        case "LOGIN":
-                            MESSAGE.LOGIN login = JsonSerializer.Deserialize<LOGIN>(com.content);
-                            if (login != null && login.username != null && login.password != null
-                                && ListAccount.Keys.Contains(login.username)
-                                && login.password.Equals(ListAccount[login.username]))
-                            {
-                               
-                                com = new COMMON.COMMON("REPLY", "OK");
-                                sendJson(socket, com);
-                                ItemClient client = new ItemClient
-                                {
-                                    Socket = socket,
-                                    ClientName = login.username,
-                                    ClientIP = socket.RemoteEndPoint.ToString(),
-                                    ClientImg = Resources.programmer,
-                                    Status = true
-                                };
-                                // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
-                                flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
-                                AddMessage("\t\t\tClient " + client.ClientName + " đã tham gia");
-                                // thêm vào list
-                                ListClient.Remove(login.username);
-                                ListClient.Add(login.username, client);
-                                ///Thêm vào datasource
-                                cbSelectToSend.DataSource = new BindingSource(ListClient, null);
-                            }
-                            else
-                            {
-                                com = new COMMON.COMMON("REPLY", "CANCEL");
-                                sendJson(socket, com);
-                                return;
-                            }
-                            break;
-                        case "REGISTER":
-                            {
-                                MESSAGE.LOGIN register = JsonSerializer.Deserialize<LOGIN>(com.content);
-                                if (register != null && register.username != null && !ListAccount.Keys.Contains(register.username))
-                                {
-                                    ListAccount.Add(register.username, register.password);
-                                    com = new COMMON.COMMON("REPLY", "OK");
-                                    sendJson(socket, com);
-                                }
-                                else
-                                {
-                                    com = new COMMON.COMMON("REPLY", "CANCEL");
-                                    sendJson(socket, com);
-                                    return;
-                                }
-                            }
-                            break;                 
-                        //default:
-                        //    break;
-                    }
-                } else
-                {
-                    com = new COMMON.COMMON("REPLY", "CANCEL");
-                    sendJson(socket, com);
-                    return;
-                }         
-            }
-
-            // login success
+            bool active = false;
+            Socket socket = obj as Socket;
             try {
-                bool wait = true;
-                while (wait)
+                while (!active)
                 {
-                    data = new byte[1024*10000];
-                    recv = socket.Receive(data);
+                    byte[] data = new byte[1024 * 10000];
+                    int recv = socket.Receive(data);
+                    if (recv == 0) return;
+                    string jsonString = Encoding.ASCII.GetString(data, 0, recv);
+                    COMMON.COMMON com = JsonSerializer.Deserialize<COMMON.COMMON>(jsonString);
+                    if (com != null)
+                    {
+                        if (com.content != null)
+                        {
+                            switch (com.kind)
+                            {
+                                case "LOGIN":
+                                    MESSAGE.LOGIN login = JsonSerializer.Deserialize<LOGIN>(com.content);
+                                    if (login != null && login.username != null && login.password != null
+                                        && ListAccount.Keys.Contains(login.username)
+                                        && login.password.Equals(ListAccount[login.username])
+                                        && !ListClient.Keys.Contains(login.username))
+                                    {
+                                       
+                                        ItemClient client = new ItemClient
+                                        {
+                                            Socket = socket,
+                                            ClientName = login.username,
+                                            ClientIP = socket.RemoteEndPoint.ToString(),
+                                            ClientImg = Resources.programmer,
+                                            Status = true
+                                        };
+                                        // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
+                                        flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
+                                        // thêm vào list
+                                        ListClient.Remove(login.username);
+                                        ListClient.Add(login.username, client);
+                                        ///Thêm vào datasource
+                                        cbSelectToSend.DataSource = new BindingSource(ListClient, null);
+                                        AddMessage("\t\t\tClient " + login.username + " đã tham gia");
+                                       
+
+                                        //// transfer data to client
+                                        List<string> userInit = ListAccount.Keys.ToList();
+                                        Dictionary<string, List<string>> groups = new Dictionary<string, List<string>>();
+                                        foreach (KeyValuePair<string, List<string>> item in ListGroup)
+                                        {
+                                            if (item.Value.Contains(login.username))
+                                            {
+                                                groups.Add(item.Key, item.Value);
+                                            }
+                                        }
+                                        MESSAGE.INITDATA initData = new INITDATA(userInit, groups,  login.username);
+                                       
+                                        string jsonLoginResult = JsonSerializer.Serialize(initData);
+                                        com = new COMMON.COMMON("LOGIN_RESULT", jsonLoginResult);
+                                        sendJson(socket, com);
+                                        active = true;
+                                    }
+                                    else
+                                    {
+                                        com = new COMMON.COMMON("LOGIN_RESULT", "FAILED");
+                                        sendJson(socket, com);
+                                        return;
+                                    }
+                                    break;
+                                case "REGISTER":
+                                    {
+                                        MESSAGE.LOGIN register = JsonSerializer.Deserialize<LOGIN>(com.content);
+                                        if (register != null && register.username != null && !ListAccount.Keys.Contains(register.username))
+                                        {
+                                            ListAccount.Add(register.username, register.password);
+                                            com = new COMMON.COMMON("REPLY", "OK");
+                                            sendJson(socket, com);
+                                        }
+                                        else
+                                        {
+                                            com = new COMMON.COMMON("REPLY", "CANCEL");
+                                            sendJson(socket, com);
+                                            return;
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            com = new COMMON.COMMON("REPLY", "CANCEL");
+                            sendJson(socket, com);
+                            return;
+                        }
+                    }
+
+                }
+            }
+            catch
+            {
+
+            }
+            
+            // login success
+            try {     
+                while (active)
+                {
+                    byte[] data = new byte[1024*10000];
+                    int recv = socket.Receive(data);
                     if (recv == 0) continue;
                     string s = Encoding.ASCII.GetString(data, 0, recv);
-                    com = JsonSerializer.Deserialize<COMMON.COMMON>(s);
+                    COMMON.COMMON com = JsonSerializer.Deserialize<COMMON.COMMON>(s);
                     if (com != null && com.content != null)
                     {
                         switch (com.kind)
                         {
-                            case "LOGIN":
-                                MESSAGE.LOGIN login = JsonSerializer.Deserialize<LOGIN>(com.content);
-                                if (login != null && login.username != null && login.password != null
-                                    && ListAccount.Keys.Contains(login.username)
-                                    && login.password.Equals(ListAccount[login.username]))
-                                {
-
-                                    com = new COMMON.COMMON("REPLY", "OK");
-                                    sendJson(socket, com);
-                                    ItemClient client = new ItemClient
-                                    {
-                                        Socket = socket,
-                                        ClientName = login.username,
-                                        ClientIP = socket.RemoteEndPoint.ToString(),
-                                        ClientImg = Resources.programmer,
-                                        Status = true
-                                    };
-                                    // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
-                                    flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
-                                    AddMessage("\t\t\tClient " + client.ClientName + " đã tham gia");
-                                    // thêm vào list
-                                    //ListClient.Remove(login.username);
-                                    ListClient.Add(login.username, client);
-                                    ///Thêm vào datasource
-                                    cbSelectToSend.DataSource = new BindingSource(ListClient, null);
-                                }
-                                else
-                                {
-                                    com = new COMMON.COMMON("REPLY", "CANCEL");
-                                    sendJson(socket, com);
-                                    return;
-                                }
-                                break;
                             case "LOGOUT":
                                 MESSAGE.LOGOUT logout = JsonSerializer.Deserialize<MESSAGE.LOGOUT>(com.content);
                                 flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Remove(ListClient[logout.username])));
@@ -245,7 +248,7 @@ namespace Server
                                 ListClient[logout.username].Socket.Close();
                                 ListClient.Remove(logout.username);
                                 cbSelectToSend.DataSource = new BindingSource(ListClient, null);
-                                wait = false;
+                                active = false;
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
@@ -257,9 +260,22 @@ namespace Server
                                         Socket friend = ListClient[mes.UsernameReceiver].Socket;
                                         friend.Send(data, recv, SocketFlags.None);
                                     }
-                                    else//Nhom
+                                    else if(ListGroup.Keys.Contains(mes.UsernameReceiver))
                                     {
-
+                                        List<string> members = ListGroup[mes.UsernameReceiver]; 
+                                        foreach (string client in members)
+                                        {
+                                            if (ListClient.Keys.Contains(client))
+                                            {
+                                                Socket friend  = ListClient[client].Socket;
+                                                if(friend != null)
+                                                {
+                                                    friend.Send(data, recv, SocketFlags.None);
+                                                    AddMessage(mes.UsernameSender + " to <group>: " + mes.UsernameReceiver + " >> " + mes.Content);
+                                                }
+                                            }
+                                            
+                                        }
                                     }
                                 }
                                 break;
@@ -271,11 +287,11 @@ namespace Server
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
                                             string[] duoihinh = {".jpeg",".jpg",".pnj",".gif"};
-<<<<<<< Updated upstream
-                                            if(file.fullname.Contains(duoihinh))
-=======
+
                                             //if(file.fullname.Contains(duoihinh))
->>>>>>> Stashed changes
+
+                                            //if(file.fullname.Contains(duoihinh))
+
                                             AddMessage(file.usernameSender + " to " + file.usernameReceiver + " >> " + file.fname + Environment.NewLine);
                                             Socket friend = ListClient[file.usernameReceiver].Socket;
                                             friend.Send(data, recv, SocketFlags.None);
@@ -320,6 +336,44 @@ namespace Server
                                     sendJson(socket, common);
                                 }
                                 break;
+                            case "CheckUser":
+                                MESSAGE.CHECKUSER check = JsonSerializer.Deserialize<MESSAGE.CHECKUSER>(com.content);
+                                string jsonCheck = JsonSerializer.Serialize(check);
+                                if (check != null && check.username != null 
+                                    && ListAccount.Keys.Contains(check.username))
+                                {
+                                    com = new COMMON.COMMON("CheckUser", jsonCheck);
+                                    sendJson(socket, com);
+                                } else
+                                {
+                                    com = new COMMON.COMMON("CheckUser", null);
+                                    sendJson(socket, com);
+                                }
+                                break;
+                            case "ADDGROUP":
+                                MESSAGE.ADDGROUP group = JsonSerializer.Deserialize<MESSAGE.ADDGROUP>(com.content);
+                                string jsongroup = JsonSerializer.Serialize(group);
+                                if (group == null || ListGroup.Keys.Contains(group.groupName))
+                                {
+                                    com = new COMMON.COMMON("ADDGROUP", null);
+                                }       
+                                else
+                                {
+                                    ListGroup.Add(group.groupName, group.members);
+                                    foreach (string client in group.members)
+                                    {
+                                        if (ListClient.Keys.Contains(client))
+                                        {
+                                            Socket friend = ListClient[client].Socket;
+                                            com = new COMMON.COMMON("ADDGROUP", jsongroup);
+                                            sendJson(friend, com);
+                                        }
+                                           
+                                    }
+                                    
+                                }
+                                break;
+                    
                         }
                     }
                 }

@@ -11,52 +11,46 @@ using System.Windows.Forms;
 
 namespace Server
 {
-    public partial class ItemClient : UserControl
+    public partial class ItemGroup : UserControl
     {
-        private Image clientImg;
-        private string clientName;
-        private string clientIP;
-        private Socket socket;
+        private Image groupImg;
+        private string groupName;
         private bool status;
         private bool pressed = false;
-        public ItemClient()
+        private List<string> members;
+        public ItemGroup()
         {
             InitializeComponent();
         }
 
-        public Image ClientImg
+        public Image GroupImg
         {
-            get { return clientImg; }
+            get { return groupImg; }
             set {
-                clientImg = value;
+                groupImg = value;
                 pictureBox.Image = value;
             }
         }
 
-        public string ClientIP
+        public List<string> Members
         {
-            get { return clientIP; }
-            set {
-                clientIP = value;
+            get { return members; }
+            set
+            {
+                members = value;
             }
         }
 
-        public string ClientName
+        public string GroupName
         {
-            get { return clientName; }
+            get { return groupName; }
             set {
-                clientName = value;
+                groupName = value;
                 lbName.Text = value;
             }
         }
 
-        public Socket Socket
-        {
-            get { return socket; }
-            set { 
-                socket = value; 
-            }
-        }
+        
 
         public bool Status
         {

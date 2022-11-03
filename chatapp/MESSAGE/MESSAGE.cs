@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,9 +17,9 @@ namespace MESSAGE
             UsernameSender = usernameSender;
             UsernameReceiver = usernameReceiver;
             Content = content;
-        }
-      
+        }  
     }
+
     public class MESSAGE_ALL
     {
         public string UsernameSender { get; set; }
@@ -49,8 +50,16 @@ namespace MESSAGE
             this.username = username;
         }
     }
+    public class CHECKUSER
+    {
+        public string username { get; set; }
+        public CHECKUSER(string username)
+        {
+            this.username = username;
+        }
+        
+    }
 
-    
 
     public class CREATEGROUP
     {
@@ -100,6 +109,19 @@ namespace MESSAGE
         public string usernameSender { get; set; }
         public string usernameReceiver { get; set; }
         public string fname { get; set; }
+    }
 
+    public class INITDATA
+    {
+        public INITDATA(List<string> users, Dictionary<string, List<string>> groups,  string username)
+        {
+            this.users = users;
+            this.groups = groups;
+            this.username = username;
+        }
+        public INITDATA() { }
+        public List<string> users { get; set; }
+        public Dictionary<string, List<string>> groups { get; set; }
+        public string username  { get; set; }
     }
 }

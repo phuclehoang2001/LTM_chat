@@ -109,16 +109,16 @@ namespace Client
             COMMON.COMMON com = JsonSerializer.Deserialize<COMMON.COMMON>(jsonString);
             try
             {
-                if (com != null && com.kind.Equals(com.REPLY))
+                if (com != null && com.kind.Equals("LOGIN_RESULT"))
                 {
-                    if (com.content == "OK")
+                    if (com.content != "FAILED")
                     {
                         MessageBox.Show("Đăng nhập thành công");
+                        MESSAGE.INITDATA intiData = JsonSerializer.Deserialize<INITDATA>(com.content);  
                         this.login = true;
                         Thread t = new Thread(OpenMainForm);
                         t.SetApartmentState(ApartmentState.STA);
-                        t.Start();
-                      
+                        t.Start(intiData);     
                     }
                     else 
                     {
@@ -143,13 +143,11 @@ namespace Client
 
         private void button1_Click(object sender, EventArgs e)
         {
-
             Thread receive = new Thread(ThreadReceive);
             receive.IsBackground = true;
             receive.SetApartmentState(ApartmentState.STA);
             receive.Start();
             receive.Join();
-
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -183,10 +181,11 @@ namespace Client
         }
 
 
-        private void OpenMainForm()
+        private void OpenMainForm(object obj)
         {
+            MESSAGE.INITDATA data = obj as MESSAGE.INITDATA;
             this.Hide();
-            MainForm newForm = new MainForm(username.Text, client);
+            MainForm newForm = new MainForm(data, client);
             newForm.ShowDialog();
             
         }
@@ -232,9 +231,6 @@ namespace Client
             client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             client.Connect(IP);
             ThreadRegister();
-            //register = new Thread(new ThreadStart(this.ThreadRegister));
-            //register.IsBackground = true;
-            //register.Start();
         }
     }
 }
