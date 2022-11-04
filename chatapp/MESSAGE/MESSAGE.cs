@@ -60,7 +60,15 @@ namespace MESSAGE
         
     }
 
+    public class USERADD
+    {
+        public string username { get; set; }
+        public USERADD(string username)
+        {
+            this.username = username;
+        }
 
+    }
     public class CREATEGROUP
     {
         public string groupname { get; set; }

@@ -218,6 +218,18 @@ namespace Server
                             
                                 }
                                 break;
+                            case "ADDUSER":
+                                MESSAGE.USERADD useradd = JsonSerializer.Deserialize<MESSAGE.USERADD>(com.content);
+                                ItemClient newclient = new ItemClient
+                                {
+                                    Socket = null,
+                                    ClientName = useradd.username,
+                                    ClientImg = Resources.programmer,
+                                    Status = true
+                                };
+                                newclient.ItemClick += Client_ItemClick;
+                                flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(newclient)));
+                                break;
                             default:
                                 break;
 

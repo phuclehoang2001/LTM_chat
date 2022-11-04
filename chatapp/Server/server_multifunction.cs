@@ -29,9 +29,9 @@ namespace Server
         Dictionary<string, string> ListAccount;// username, pass
         Dictionary<string, ItemClient> ListClient;// username, viewcontrol (infor_user: ava,socket,fullname...)
         Dictionary<string, List<string>> ListGroup;// groupname, members
-        
+
         private const int PORT_NUMBER = 2008;
-        
+
         public server_multifunction()
         {
             InitializeComponent();
@@ -47,7 +47,7 @@ namespace Server
             ListGroup = new Dictionary<string, List<string>>();
             ListGroup.Add("groupdemo", new List<string>
             {
-                ListAccount.ElementAt(1).Key, 
+                ListAccount.ElementAt(1).Key,
                 ListAccount.ElementAt(2).Key,
                 ListAccount.ElementAt(3).Key,
             });
@@ -60,11 +60,11 @@ namespace Server
             string myIP = null;// = Dns.GetHostByName(hostName).AddressList[0].ToString();
             IPAddress[] MangIP = Dns.GetHostByName(hostName).AddressList;
             foreach (IPAddress IP in MangIP)
-            if (IP.ToString().Contains("."))
-            {
-                myIP = IP.ToString();
-                break;
-            }
+                if (IP.ToString().Contains("."))
+                {
+                    myIP = IP.ToString();
+                    break;
+                }
             if (myIP == null) this.Close();
             IPServer.Text = myIP;
             PortServer.Text = PORT_NUMBER.ToString();
@@ -82,7 +82,7 @@ namespace Server
             Connect();
         }
 
-        
+
         // kết nối -> tạo server
         void Connect()
         {
@@ -103,7 +103,7 @@ namespace Server
             try
             {
                 while (true)
-                {               
+                {
                     Socket socket = server.Accept();
                     Thread receive = new Thread(ThreadReceive);
                     receive.IsBackground = true;
@@ -123,14 +123,15 @@ namespace Server
             client.Send(jsonUtf8Bytes, jsonUtf8Bytes.Length, SocketFlags.None);
         }
 
-        
+
 
         //nhận tin
         void ThreadReceive(object obj)
         {
             bool active = false;
             Socket socket = obj as Socket;
-            try {
+            try
+            {
                 while (!active)
                 {
                     byte[] data = new byte[1024 * 10000];
@@ -151,7 +152,7 @@ namespace Server
                                         && login.password.Equals(ListAccount[login.username])
                                         && !ListClient.Keys.Contains(login.username))
                                     {
-                                       
+
                                         ItemClient client = new ItemClient
                                         {
                                             Socket = socket,
@@ -168,7 +169,7 @@ namespace Server
                                         ///Thêm vào datasource
                                         cbSelectToSend.DataSource = new BindingSource(ListClient, null);
                                         AddMessage("\t\t\tClient " + login.username + " đã tham gia");
-                                       
+
 
                                         //// transfer data to client
                                         List<string> userInit = ListAccount.Keys.ToList();
@@ -180,10 +181,12 @@ namespace Server
                                                 groups.Add(item.Key, item.Value);
                                             }
                                         }
-                                        MESSAGE.INITDATA initData = new INITDATA(userInit, groups,  login.username);
-                                       
+                                        MESSAGE.INITDATA initData = new INITDATA(userInit, groups, login.username);
+
                                         string jsonLoginResult = JsonSerializer.Serialize(initData);
                                         com = new COMMON.COMMON("LOGIN_RESULT", jsonLoginResult);
+
+
                                         sendJson(socket, com);
                                         active = true;
                                     }
@@ -202,6 +205,20 @@ namespace Server
                                             ListAccount.Add(register.username, register.password);
                                             com = new COMMON.COMMON("REPLY", "OK");
                                             sendJson(socket, com);
+
+
+                                            MESSAGE.USERADD useradd = new USERADD(register.username);
+                                            string jsonuseradd = JsonSerializer.Serialize(useradd);
+                                            com = new COMMON.COMMON("ADDUSER", jsonuseradd);
+                                            foreach (KeyValuePair<string, ItemClient> item in ListClient)
+                                            {
+                                                if (item.Value.ClientName != "Tất cả")
+                                                {
+                                                    Socket friend = item.Value.Socket;
+                                                    sendJson(friend, com);
+
+                                                }
+                                            }
                                         }
                                         else
                                         {
@@ -227,12 +244,13 @@ namespace Server
             {
 
             }
-            
+
             // login success
-            try {     
+            try
+            {
                 while (active)
                 {
-                    byte[] data = new byte[1024*10000];
+                    byte[] data = new byte[1024 * 10000];
                     int recv = socket.Receive(data);
                     if (recv == 0) continue;
                     string s = Encoding.ASCII.GetString(data, 0, recv);
@@ -260,21 +278,21 @@ namespace Server
                                         Socket friend = ListClient[mes.UsernameReceiver].Socket;
                                         friend.Send(data, recv, SocketFlags.None);
                                     }
-                                    else if(ListGroup.Keys.Contains(mes.UsernameReceiver))
+                                    else if (ListGroup.Keys.Contains(mes.UsernameReceiver))
                                     {
-                                        List<string> members = ListGroup[mes.UsernameReceiver]; 
+                                        List<string> members = ListGroup[mes.UsernameReceiver];
                                         foreach (string client in members)
                                         {
                                             if (ListClient.Keys.Contains(client))
                                             {
-                                                Socket friend  = ListClient[client].Socket;
-                                                if(friend != null)
+                                                Socket friend = ListClient[client].Socket;
+                                                if (friend != null)
                                                 {
                                                     friend.Send(data, recv, SocketFlags.None);
                                                     AddMessage(mes.UsernameSender + " to <group>: " + mes.UsernameReceiver + " >> " + mes.Content);
                                                 }
                                             }
-                                            
+
                                         }
                                     }
                                 }
@@ -286,7 +304,7 @@ namespace Server
                                     {
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
-                                            string[] duoihinh = {".jpeg",".jpg",".pnj",".gif"};
+                                            string[] duoihinh = { ".jpeg", ".jpg", ".pnj", ".gif" };
 
                                             //if(file.fullname.Contains(duoihinh))
 
@@ -339,12 +357,13 @@ namespace Server
                             case "CheckUser":
                                 MESSAGE.CHECKUSER check = JsonSerializer.Deserialize<MESSAGE.CHECKUSER>(com.content);
                                 string jsonCheck = JsonSerializer.Serialize(check);
-                                if (check != null && check.username != null 
+                                if (check != null && check.username != null
                                     && ListAccount.Keys.Contains(check.username))
                                 {
                                     com = new COMMON.COMMON("CheckUser", jsonCheck);
                                     sendJson(socket, com);
-                                } else
+                                }
+                                else
                                 {
                                     com = new COMMON.COMMON("CheckUser", null);
                                     sendJson(socket, com);
@@ -356,7 +375,7 @@ namespace Server
                                 if (group == null || ListGroup.Keys.Contains(group.groupName))
                                 {
                                     com = new COMMON.COMMON("ADDGROUP", null);
-                                }       
+                                }
                                 else
                                 {
                                     ListGroup.Add(group.groupName, group.members);
@@ -368,21 +387,23 @@ namespace Server
                                             com = new COMMON.COMMON("ADDGROUP", jsongroup);
                                             sendJson(friend, com);
                                         }
-                                           
+
                                     }
-                                    
+
                                 }
                                 break;
-                    
+
                         }
                     }
                 }
-            } catch (Exception e) { 
+            }
+            catch (Exception e)
+            {
                 //MessageBox.Show(e.Message); 
             }
-            
+
         }
-        
+
         void AddMessage(string s)
         {
             if (InvokeRequired)
@@ -391,7 +412,7 @@ namespace Server
                 catch (Exception) { }
                 return;
             }
-           
+
             var listViewItem = new ListViewItem(s);
             lsvMessage.Items.Add(listViewItem);
 
@@ -423,19 +444,20 @@ namespace Server
 
 
         private void btnSend_Click(object sender, EventArgs e)
-        {   
+        {
             if (txbMessage.Text == string.Empty) return;
             if (cbSelectToSend.SelectedIndex == 0)
             {
                 foreach (KeyValuePair<string, ItemClient> item in ListClient)
                 {
-                    if(!item.Key.Equals("Tất cả"))
-                        Send(item.Value,"MESSAGE_ALL");
+                    if (!item.Key.Equals("Tất cả"))
+                        Send(item.Value, "MESSAGE_ALL");
                 }
                 AddMessage("Server >> " + txbMessage.Text);
-            } else
+            }
+            else
             {
-                KeyValuePair<string, ItemClient>  item = (KeyValuePair<string, ItemClient>) cbSelectToSend.SelectedItem;
+                KeyValuePair<string, ItemClient> item = (KeyValuePair<string, ItemClient>)cbSelectToSend.SelectedItem;
                 Send(item.Value, "MESSAGE");
                 AddMessage("Server to " + item.Key + " >> " + txbMessage.Text);
             }
@@ -443,14 +465,14 @@ namespace Server
         }
 
         //gửi tin
-        void Send(ItemClient client,string kind)
+        void Send(ItemClient client, string kind)
         {
             string jsonString;
             COMMON.COMMON common;
             switch (kind)
             {
                 case "MESSAGE_ALL":
-                    MESSAGE.MESSAGE_ALL mes_all = new MESSAGE.MESSAGE_ALL("Server",txbMessage.Text);
+                    MESSAGE.MESSAGE_ALL mes_all = new MESSAGE.MESSAGE_ALL("Server", txbMessage.Text);
                     jsonString = JsonSerializer.Serialize(mes_all);
                     common = new COMMON.COMMON(kind, jsonString);
                     sendJson(client.Socket, common);
@@ -464,7 +486,7 @@ namespace Server
                 default:
                     break;
             }
-            
-        } 
+
+        }
     }
 }

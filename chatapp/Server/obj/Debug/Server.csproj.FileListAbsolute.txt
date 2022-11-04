@@ -132,3 +132,4 @@ E:\document\LTM\LTM_chat\chatapp\Server\obj\Debug\Server.csproj.CopyComplete
 E:\document\LTM\LTM_chat\chatapp\Server\obj\Debug\Server.exe
 E:\document\LTM\LTM_chat\chatapp\Server\obj\Debug\Server.pdb
 E:\document\LTM\LTM_chat\chatapp\Server\obj\Debug\Server.ItemGroup.resources
+D:\xampp\htdocs\git\LTM_chat\chatapp\Server\obj\Debug\Server.ItemGroup.resources
