@@ -39,7 +39,7 @@ namespace Server
         private Dictionary<string, List<string>> groups;
         Thread mainThread;
         //bug: login more 2 time, logout remove UI server, update list_user when register
-        public MainForm(MESSAGE.INITDATA data,Socket socket)
+        public MainForm(MESSAGE.INITDATA data, Socket socket)
         {
             InitializeComponent();
             this.username = data.username;
@@ -89,7 +89,7 @@ namespace Server
                 }
             }
 
-            ChangeAttribute(lbWelcome,  "Hello " + this.username);
+            ChangeAttribute(lbWelcome, "Hello " + this.username);
             mainThread = new Thread(new ThreadStart(this.ThreadTask));
             mainThread.IsBackground = true;
             mainThread.Start();
@@ -102,7 +102,7 @@ namespace Server
                 return;
             this.receiver = item.ClientName;
             this.groupRecevier = "";
-            ChangeAttribute(lbReceiver, "Send to <user>: "+ this.receiver  );
+            ChangeAttribute(lbReceiver, "Send to <user>: " + this.receiver);
         }
 
         private void Group_ItemClick(object sender, EventArgs e)
@@ -123,16 +123,21 @@ namespace Server
         /// </summary>
         private void ListView1_SelectedIndexChanged_UsingItems(object sender, System.EventArgs e)
         {
-
-            ListView.SelectedListViewItemCollection breakfast =
-                this.listView2.SelectedItems;
-            foreach (ListViewItem item in breakfast)
+            folderBrowserDialog1.Description = "Chọn thư mục để lưu file";
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                DownloadFile(item.Text);
+                ListView.SelectedListViewItemCollection breakfast =
+                this.listView2.SelectedItems;
+                string path=folderBrowserDialog1.SelectedPath+@"\";
+                foreach (ListViewItem item in breakfast)
+                {
+                    DownloadFile(item.Text,path);
+                }
             }
         }
 
         //nhận tin
+        [STAThread]
         private void ThreadTask()
         {
             byte[] data = new byte[1024 * 10000];
@@ -157,7 +162,8 @@ namespace Server
                                 if (mes.UsernameReceiver != this.username)
                                 {
                                     AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " <group>: " + mes.Content);
-                                } else
+                                }
+                                else
                                 {
                                     AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " <me>: " + mes.Content);
                                 }
@@ -170,15 +176,18 @@ namespace Server
                                 MESSAGE.FILE file = JsonSerializer.Deserialize<MESSAGE.FILE>(com.content);
                                 try
                                 {
+                                    
+                                    
+                                        string receivedPath = file.path+ @"\";
+                                        int recvdata = Buffer.ByteLength(file.data);
+                                        int fileNameLen = BitConverter.ToInt32(file.data, 0);
 
-                                    string receivedPath = @"E:\document\downloadfile\";
-                                    int recvdata = Buffer.ByteLength(file.data);
-                                    int fileNameLen = BitConverter.ToInt32(file.data, 0);
 
+                                        BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
+                                        bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
+                                        bWrite.Close();
+                                    
 
-                                    BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
-                                    bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
-                                    bWrite.Close();
                                 }
                                 catch
                                 {
@@ -186,15 +195,15 @@ namespace Server
                                 }
                                 break;
                             case "CheckUser":
-                                
+
                                 if (com.content == null)
                                 {
-                                    MessageBox.Show("Username không tồn tại hoặc không chính xác");    
+                                    MessageBox.Show("Username không tồn tại hoặc không chính xác");
                                 }
                                 else
                                 {
                                     MESSAGE.CHECKUSER check = JsonSerializer.Deserialize<MESSAGE.CHECKUSER>(com.content);
-                                    AddUser(check.username);          
+                                    AddUser(check.username);
                                 }
                                 break;
                             case "ADDGROUP":
@@ -215,7 +224,7 @@ namespace Server
                                     };
                                     itemGroup.ItemClick += Group_ItemClick;
                                     flpUsers.Invoke((MethodInvoker)(() => flpGroups.Controls.Add(itemGroup)));
-                            
+
                                 }
                                 break;
                             case "ADDUSER":
@@ -293,13 +302,14 @@ namespace Server
                 COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
                 sendJson(client, common);
                 AddMessage(this.username + " to " + receiver + " >> " + txbMessage.Text);
-            } else if(this.groupRecevier != "")
+            }
+            else if (this.groupRecevier != "")
             {
                 MESSAGE.MESSAGE mes = new MESSAGE.MESSAGE(this.username, this.groupRecevier, txbMessage.Text);
                 string jsonString = JsonSerializer.Serialize(mes);
                 COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
                 sendJson(client, common);
-            }     
+            }
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -308,7 +318,7 @@ namespace Server
             string jsonString = JsonSerializer.Serialize(logout);
             COMMON.COMMON common = new COMMON.COMMON("LOGOUT", jsonString);
             sendJson(client, common);
-            login= false;
+            login = false;
             this.Close();
         }
 
@@ -317,7 +327,7 @@ namespace Server
         {
             OpenFileDialog ofd = new OpenFileDialog() { Multiselect = true, ValidateNames = true, Filter = "All Files|*.*" };
             ofd.ShowDialog();
-            
+
             FileInfo fi = new FileInfo(ofd.FileName);
             //AppendTextBox(fi.Name);
 
@@ -331,17 +341,17 @@ namespace Server
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
 
-            MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver,fi.FullName, fi.Name, fi.DirectoryName, clientData);
+            MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver, fi.FullName, fi.Name, fi.DirectoryName, clientData);
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
             sendJson(client, common);
         }
 
 
-        
-        private void DownloadFile(string fname)
+
+        private void DownloadFile(string fname,string path)
         {
-            MESSAGE.DOWNFILE mes = new MESSAGE.DOWNFILE(this.username, this.receiver, fname);
+            MESSAGE.DOWNFILE mes = new MESSAGE.DOWNFILE(this.username, this.receiver, fname,path);
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("DownLoadFile", jsonString);
             sendJson(client, common);
@@ -349,14 +359,14 @@ namespace Server
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
+
             try
             {
                 if (mainThread != null)
                 {
                     Application.Exit();
                 }
-                    
+
             }
             catch (Exception error)
             {
@@ -392,7 +402,7 @@ namespace Server
             System.Windows.Forms.ListView.SelectedListViewItemCollection icons =
         this.listView1.SelectedItems;
 
-            string icon="";
+            string icon = "";
             foreach (ListViewItem item in icons)
             {
                 icon += item.Text;
@@ -404,9 +414,9 @@ namespace Server
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if(listView1.Visible==false)
+            if (listView1.Visible == false)
                 listView1.Visible = true;
-            else if(listView1.Visible == true)
+            else if (listView1.Visible == true)
                 listView1.Visible = false;
         }
 
@@ -445,7 +455,7 @@ namespace Server
                 {
                     MessageBox.Show("Đã thêm " + userName + " !");
                     return;
-                }         
+                }
             }
             MESSAGE.CHECKUSER check = new MESSAGE.CHECKUSER(userName);
             string jsonString = JsonSerializer.Serialize(check);
@@ -461,13 +471,14 @@ namespace Server
                 MessageBox.Show("Hãy nhập tên nhóm!");
                 return;
             }
-            if(listUserGroup.Items.Count <2)
+            if (listUserGroup.Items.Count < 2)
             {
                 MessageBox.Show("Thêm ít nhất 2 thành viên để tạo nhóm");
-            } else
+            }
+            else
             {
                 List<string> members = new List<string>();
-                for(int i = 0; i< listUserGroup.Items.Count; i++)
+                for (int i = 0; i < listUserGroup.Items.Count; i++)
                 {
                     members.Add(listUserGroup.Items[i].Text);
                 }
@@ -476,7 +487,7 @@ namespace Server
                 MESSAGE.ADDGROUP newGroup = new MESSAGE.ADDGROUP(groupName, members);
                 string jsonString = JsonSerializer.Serialize(newGroup);
                 COMMON.COMMON common = new COMMON.COMMON("ADDGROUP", jsonString);
-                sendJson(client, common);       
+                sendJson(client, common);
             }
         }
 
@@ -494,7 +505,7 @@ namespace Server
             MESSAGE.LOGOUT logout = new MESSAGE.LOGOUT(this.username);
             string jsonString = JsonSerializer.Serialize(logout);
             COMMON.COMMON common = new COMMON.COMMON("LOGOUT", jsonString);
-            sendJson(client, common);         
+            sendJson(client, common);
         }
     }
 }

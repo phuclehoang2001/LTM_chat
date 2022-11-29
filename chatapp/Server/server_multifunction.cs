@@ -317,7 +317,7 @@ namespace Server
                                         try
                                         {
 
-                                            string receivedPath = @"E:\document\uploadfile\";
+                                            string receivedPath = @"D:\C free\Upload\";
                                             byte[] clientData = new byte[1024 * 10000];
                                             int recvdata = Buffer.ByteLength(file.data);
                                             int fileNameLen = BitConverter.ToInt32(file.data, 0);
@@ -340,7 +340,7 @@ namespace Server
 
                                     byte[] fileNameByte = Encoding.ASCII.GetBytes(dfile.fname);
 
-                                    byte[] fileData = File.ReadAllBytes(@"E:\document\uploadfile\" + dfile.fname);
+                                    byte[] fileData = File.ReadAllBytes(@"D:\C free\Upload\" + dfile.fname);
                                     byte[] clientData = new byte[4 + fileNameByte.Length + fileData.Length];
                                     byte[] fileNameLen = BitConverter.GetBytes(fileNameByte.Length);
 
@@ -348,7 +348,7 @@ namespace Server
                                     fileNameByte.CopyTo(clientData, 4);
                                     fileData.CopyTo(clientData, 4 + fileNameByte.Length);
 
-                                    MESSAGE.FILE df = new MESSAGE.FILE(dfile.usernameSender, dfile.usernameReceiver, @"D:\C free\" + dfile.fname, dfile.fname, @"D:\C free\", clientData);
+                                    MESSAGE.FILE df = new MESSAGE.FILE(dfile.usernameSender, dfile.usernameReceiver, @"D:\C free\" + dfile.fname, dfile.fname, dfile.path, clientData);
                                     string jsonStringFile = JsonSerializer.Serialize(df);
                                     COMMON.COMMON common = new COMMON.COMMON("DownLoadFile", jsonStringFile);
                                     sendJson(socket, common);

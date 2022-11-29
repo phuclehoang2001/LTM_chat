@@ -108,12 +108,14 @@ namespace MESSAGE
     }
     public class DOWNFILE
     {
-        public DOWNFILE(string usernameSender, string usernameReceiver, string fname)
+        public DOWNFILE(string usernameSender, string usernameReceiver, string fname,string path)
         {
             this.usernameSender = usernameSender;
             this.usernameReceiver = usernameReceiver;
             this.fname = fname;
+            this.path = path;
         }
+        public string path { get; set; }
         public string usernameSender { get; set; }
         public string usernameReceiver { get; set; }
         public string fname { get; set; }
