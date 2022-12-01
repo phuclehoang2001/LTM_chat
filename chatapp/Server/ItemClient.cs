@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -22,6 +23,7 @@ namespace Server
         public ItemClient()
         {
             InitializeComponent();
+            
         }
 
         public Image ClientImg
@@ -63,9 +65,42 @@ namespace Server
             get { return status; }
             set
             {
-                status = value;
+                try
+                {
+                    status = value;
+                    this.isOnline();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
+
+                
             }
         }
+
+        private void isOnline()
+        {
+           
+            if (this.IsHandleCreated)
+            { 
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(this.isOnline));     
+                    return;
+                }
+                if (status)
+                {
+                    imgStatus.Visible = true;
+                }
+                else
+                {
+                    imgStatus.Visible = false;
+                }
+            } 
+           
+        }
+
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
@@ -97,6 +132,16 @@ namespace Server
         private void panel1_MouseDown(object sender, MouseEventArgs e)
         {
             ItemClick(this, new EventArgs());     
+        }
+
+        private void lbName_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ItemClient_Load(object sender, EventArgs e)
+        {
+            this.isOnline();
         }
     }
 }

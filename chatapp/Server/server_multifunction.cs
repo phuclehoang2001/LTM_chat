@@ -161,6 +161,7 @@ namespace Server
                                             ClientImg = Resources.programmer,
                                             Status = true
                                         };
+                                        
                                         // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
                                         flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
                                         // thêm vào list
@@ -171,8 +172,17 @@ namespace Server
                                         AddMessage("\t\t\tClient " + login.username + " đã tham gia");
 
 
-                                        //// transfer data to client
-                                        List<string> userInit = ListAccount.Keys.ToList();
+                                        //// transfer data to client ListAccount.Keys.ToList();
+                                        Dictionary<string, bool> userInit = new Dictionary<string,bool>();
+                                        foreach (KeyValuePair<string, string> item in ListAccount)
+                                        {
+                                            bool onlineStatus = false;
+                                            if (ListClient.ContainsKey(item.Key))
+                                            {
+                                                onlineStatus = true;
+                                            }
+                                            userInit.Add(item.Key, onlineStatus);
+                                        }
                                         Dictionary<string, List<string>> groups = new Dictionary<string, List<string>>();
                                         foreach (KeyValuePair<string, List<string>> item in ListGroup)
                                         {
@@ -181,13 +191,24 @@ namespace Server
                                                 groups.Add(item.Key, item.Value);
                                             }
                                         }
+                                        // du lieu khoi tao
                                         MESSAGE.INITDATA initData = new INITDATA(userInit, groups, login.username);
-
                                         string jsonLoginResult = JsonSerializer.Serialize(initData);
                                         com = new COMMON.COMMON("LOGIN_RESULT", jsonLoginResult);
-
-
                                         sendJson(socket, com);
+
+                                        // trang thai online
+                                        MESSAGE.ONLINE online = new ONLINE(login.username,true);
+                                        string jsonOnline = JsonSerializer.Serialize(online);
+                                        com = new COMMON.COMMON("ONLINE", jsonOnline);
+                                        foreach (KeyValuePair<string, ItemClient> item in ListClient)
+                                        {
+                                            if (item.Value.ClientName != "Tất cả" && item.Value.ClientName != login.username)
+                                            {
+                                                Socket friend = item.Value.Socket;
+                                                sendJson(friend, com);
+                                            }
+                                        }
                                         active = true;
                                     }
                                     else
@@ -266,6 +287,20 @@ namespace Server
                                 ListClient[logout.username].Socket.Close();
                                 ListClient.Remove(logout.username);
                                 cbSelectToSend.DataSource = new BindingSource(ListClient, null);
+
+
+                                // trang thai online
+                                MESSAGE.ONLINE online = new ONLINE(logout.username, false);
+                                string jsonOnline = JsonSerializer.Serialize(online);
+                                com = new COMMON.COMMON("ONLINE", jsonOnline);
+                                foreach (KeyValuePair<string, ItemClient> item in ListClient)
+                                {
+                                    if (item.Value.ClientName != "Tất cả" && item.Value.ClientName != logout.username)
+                                    {
+                                        Socket friend = item.Value.Socket;
+                                        sendJson(friend, com);
+                                    }
+                                }
                                 active = false;
                                 break;
                             case "MESSAGE":
@@ -305,11 +340,6 @@ namespace Server
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
                                             string[] duoihinh = { ".jpeg", ".jpg", ".pnj", ".gif" };
-
-                                            //if(file.fullname.Contains(duoihinh))
-
-                                            //if(file.fullname.Contains(duoihinh))
-
                                             AddMessage(file.usernameSender + " to " + file.usernameReceiver + " >> " + file.fname + Environment.NewLine);
                                             Socket friend = ListClient[file.usernameReceiver].Socket;
                                             friend.Send(data, recv, SocketFlags.None);
@@ -317,7 +347,7 @@ namespace Server
                                         try
                                         {
 
-                                            string receivedPath = @"D:\C free\Upload\";
+                                            string receivedPath = @"E:\document\uploadfile\";
                                             byte[] clientData = new byte[1024 * 10000];
                                             int recvdata = Buffer.ByteLength(file.data);
                                             int fileNameLen = BitConverter.ToInt32(file.data, 0);
@@ -340,7 +370,7 @@ namespace Server
 
                                     byte[] fileNameByte = Encoding.ASCII.GetBytes(dfile.fname);
 
-                                    byte[] fileData = File.ReadAllBytes(@"D:\C free\Upload\" + dfile.fname);
+                                    byte[] fileData = File.ReadAllBytes(@"E:\document\uploadfile\" + dfile.fname);
                                     byte[] clientData = new byte[4 + fileNameByte.Length + fileData.Length];
                                     byte[] fileNameLen = BitConverter.GetBytes(fileNameByte.Length);
 
@@ -417,25 +447,7 @@ namespace Server
             lsvMessage.Items.Add(listViewItem);
 
         }
-        //phân mảnh data -> byte
-        byte[] Serialize(object obj)
-        {
-            MemoryStream stream = new MemoryStream();
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            formatter.Serialize(stream, obj);
-
-            return stream.ToArray();
-        }
-
-        //gom mảnh data 
-        object Deserialize(byte[] data)
-        {
-            MemoryStream stream = new MemoryStream(data);
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            return formatter.Deserialize(stream);
-        }
+       
 
         private void button1_Click(object sender, EventArgs e)
         {

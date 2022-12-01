@@ -21,7 +21,6 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.Runtime.Remoting.Contexts;
 using COMMON;
 using Client;
-using Server;
 using Client.Properties;
 using System.Xml.Linq;
 
@@ -35,10 +34,13 @@ namespace Server
         private string username;
         private string receiver = "";
         private string groupRecevier = "";
-        private List<string> users;
+        private Dictionary<string, bool> users;
         private Dictionary<string, List<string>> groups;
         Thread mainThread;
-        //bug: login more 2 time, logout remove UI server, update list_user when register
+        //bug: login more 2 time,
+        //send file trong group,
+        //click chọn tin nhắn không được mở save file
+        //lay ip tu wifi tren server
         public MainForm(MESSAGE.INITDATA data, Socket socket)
         {
             InitializeComponent();
@@ -58,16 +60,18 @@ namespace Server
 
         private void client_Load(object sender, EventArgs e)
         {
-            foreach (string username in users)
+            foreach (KeyValuePair<string, bool> user in users)
             {
-                if (!username.Equals(this.username) && !username.Equals("Tất cả"))
+                if (!user.Key.Equals(this.username) && !user.Key.Equals("Tất cả"))
                 {
+                    bool onlineStatus = user.Value;
+                    string name = user.Key;
                     ItemClient client = new ItemClient
                     {
                         Socket = null,
-                        ClientName = username,
+                        ClientName = name,
                         ClientImg = Resources.programmer,
-                        Status = true
+                        Status = onlineStatus
                     };
                     flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
                     client.ItemClick += Client_ItemClick;
@@ -119,19 +123,19 @@ namespace Server
             client.Send(jsonUtf8Bytes, jsonUtf8Bytes.Length, SocketFlags.None);
         }
         /// <summary>
-        /// Thêm cái hàm ở dưới, coi reference để biết sửa thêm chỗ nào
+        
         /// </summary>
         private void ListView1_SelectedIndexChanged_UsingItems(object sender, System.EventArgs e)
         {
-            folderBrowserDialog1.Description = "Chọn thư mục để lưu file";
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            ListView.SelectedListViewItemCollection breakfast =
+            this.listView2.SelectedItems;
+            foreach (ListViewItem item in breakfast)
             {
-                ListView.SelectedListViewItemCollection breakfast =
-                this.listView2.SelectedItems;
-                string path=folderBrowserDialog1.SelectedPath+@"\";
-                foreach (ListViewItem item in breakfast)
+                folderBrowserDialog1.Description = "Chọn thư mục để lưu file";
+                if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
                 {
-                    DownloadFile(item.Text,path);
+                    string path = folderBrowserDialog1.SelectedPath + @"\";
+                    DownloadFile(item.Text, path);
                 }
             }
         }
@@ -176,18 +180,12 @@ namespace Server
                                 MESSAGE.FILE file = JsonSerializer.Deserialize<MESSAGE.FILE>(com.content);
                                 try
                                 {
-                                    
-                                    
                                         string receivedPath = file.path+ @"\";
                                         int recvdata = Buffer.ByteLength(file.data);
                                         int fileNameLen = BitConverter.ToInt32(file.data, 0);
-
-
                                         BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
                                         bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
                                         bWrite.Close();
-                                    
-
                                 }
                                 catch
                                 {
@@ -239,6 +237,17 @@ namespace Server
                                 newclient.ItemClick += Client_ItemClick;
                                 flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(newclient)));
                                 break;
+                            case "ONLINE":
+                               
+                                MESSAGE.ONLINE online = JsonSerializer.Deserialize<MESSAGE.ONLINE>(com.content);  
+                                flpUsers.Invoke((MethodInvoker)(() =>
+                                {
+                                    ItemClient client = flpUsers.Controls.OfType<ItemClient>().
+                                                        Where(item => item.ClientName == online.username).SingleOrDefault();
+                                   
+                                    client.Status = online.onlineStatus;                         
+                                }));
+                                break;
                             default:
                                 break;
 
@@ -267,23 +276,7 @@ namespace Server
             var listViewItem = new ListViewItem(s);
             listView2.Items.Add(listViewItem);
         }
-        //phân mảnh data -> byte
-        byte[] Serialize(object obj)
-        {
-            MemoryStream stream = new MemoryStream();
-            BinaryFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(stream, obj);
-            return stream.ToArray();
-        }
-
-        //gom mảnh data 
-        object Deserialize(byte[] data)
-        {
-            MemoryStream stream = new MemoryStream(data);
-            BinaryFormatter formatter = new BinaryFormatter();
-
-            return formatter.Deserialize(stream);
-        }
+      
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -329,7 +322,7 @@ namespace Server
             ofd.ShowDialog();
 
             FileInfo fi = new FileInfo(ofd.FileName);
-            //AppendTextBox(fi.Name);
+            
 
             byte[] fileNameByte = Encoding.ASCII.GetBytes(fi.Name);
 
@@ -340,11 +333,12 @@ namespace Server
             fileNameLen.CopyTo(clientData, 0);
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
-
+            
             MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver, fi.FullName, fi.Name, fi.DirectoryName, clientData);
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
             sendJson(client, common);
+            AddMessage(fi.Name);
         }
 
 

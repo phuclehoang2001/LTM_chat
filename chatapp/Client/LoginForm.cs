@@ -96,7 +96,7 @@ namespace Client
         void ThreadReceive()
         {
             //gui
-            byte[] data = new byte[1024];
+            byte[] data = new byte[1024*1000];
             MESSAGE.LOGIN login = new MESSAGE.LOGIN(username.Text, password.Text);
             string jsonString = JsonSerializer.Serialize(login);
             COMMON.COMMON common = new COMMON.COMMON("LOGIN", jsonString);

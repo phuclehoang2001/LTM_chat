@@ -67,8 +67,19 @@ namespace MESSAGE
         {
             this.username = username;
         }
-
     }
+
+    public class ONLINE
+    {
+        public string username { get; set; }
+        public bool onlineStatus { get; set; }
+        public ONLINE(string username, bool onlineStatus)
+        {
+            this.username = username;
+            this.onlineStatus = onlineStatus;
+        }
+    }
+
     public class CREATEGROUP
     {
         public string groupname { get; set; }
@@ -123,14 +134,14 @@ namespace MESSAGE
 
     public class INITDATA
     {
-        public INITDATA(List<string> users, Dictionary<string, List<string>> groups,  string username)
+        public INITDATA(Dictionary<string, bool> users, Dictionary<string, List<string>> groups,  string username)
         {
             this.users = users;
             this.groups = groups;
             this.username = username;
         }
         public INITDATA() { }
-        public List<string> users { get; set; }
+        public Dictionary<string, bool> users { get; set; }
         public Dictionary<string, List<string>> groups { get; set; }
         public string username  { get; set; }
     }
