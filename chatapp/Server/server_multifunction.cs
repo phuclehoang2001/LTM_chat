@@ -19,6 +19,7 @@ using System.Text.Json.Serialization;
 using MESSAGE;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using System.Net.NetworkInformation;
 
 namespace Server
 {
@@ -56,15 +57,34 @@ namespace Server
         private void server_multifunction_Load(object sender, EventArgs e)
         {
             CreateUsers();
-            string hostName = Dns.GetHostName();
-            string myIP = null;// = Dns.GetHostByName(hostName).AddressList[0].ToString();
-            IPAddress[] MangIP = Dns.GetHostByName(hostName).AddressList;
-            foreach (IPAddress IP in MangIP)
-                if (IP.ToString().Contains("."))
+            //string hostName = Dns.GetHostName();
+            //string myIP = null;// = Dns.GetHostByName(hostName).AddressList[0].ToString();
+            ////IPAddress[] MangIP = Dns.GetHostByName(hostName).AddressList;
+            //foreach (IPAddress IP in MangIP)
+            //    if (IP.ToString().Contains("."))
+            //    {
+            //        myIP = IP.ToString();
+            //        break;
+            //    }
+            string myIP = null;
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            {      
+                if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 )
                 {
-                    myIP = IP.ToString();
-                    break;
+                    if (ni.Name.Equals("Wi-Fi"))
+                    {
+                        foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                        {
+                            if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
+                                myIP = ip.Address.ToString();
+                        
+                            }
+                        }
+                    }         
                 }
+            }
+        
             if (myIP == null) this.Close();
             IPServer.Text = myIP;
             PortServer.Text = PORT_NUMBER.ToString();
@@ -309,7 +329,7 @@ namespace Server
                                 {
                                     if (ListClient.Keys.Contains(mes.UsernameReceiver))
                                     {
-                                        AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " >> " + mes.Content);
+                                        AddMessage(mes.UsernameSender + " to " + mes.UsernameReceiver + " : " + mes.Content);
                                         Socket friend = ListClient[mes.UsernameReceiver].Socket;
                                         friend.Send(data, recv, SocketFlags.None);
                                     }
@@ -324,7 +344,7 @@ namespace Server
                                                 if (friend != null)
                                                 {
                                                     friend.Send(data, recv, SocketFlags.None);
-                                                    AddMessage(mes.UsernameSender + " to <group>: " + mes.UsernameReceiver + " >> " + mes.Content);
+                                                    AddMessage(mes.UsernameSender + " to  " + mes.UsernameReceiver + " <group>: " + mes.Content);
                                                 }
                                             }
 
@@ -340,26 +360,62 @@ namespace Server
                                         if (ListClient.Keys.Contains(file.usernameReceiver))
                                         {
                                             string[] duoihinh = { ".jpeg", ".jpg", ".pnj", ".gif" };
-                                            AddMessage(file.usernameSender + " to " + file.usernameReceiver + " >> " + file.fname + Environment.NewLine);
+                                            AddMessage(file.usernameSender + " to " + file.usernameReceiver + " : " + file.fname + Environment.NewLine);
                                             Socket friend = ListClient[file.usernameReceiver].Socket;
                                             friend.Send(data, recv, SocketFlags.None);
+                                            try
+                                            {
+
+                                                string receivedPath = @"E:\document\uploadfile\";
+                                                byte[] clientData = new byte[1024 * 10000];
+                                                int recvdata = Buffer.ByteLength(file.data);
+                                                int fileNameLen = BitConverter.ToInt32(file.data, 0);
+
+                                                BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
+                                                bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
+                                                bWrite.Close();
+                                            }
+                                            catch
+                                            {
+
+                                            }
                                         }
-                                        try
+
+                                        if (ListGroup.Keys.Contains(file.usernameReceiver))
                                         {
+                                            List<string> members = ListGroup[file.usernameReceiver];
+                                            foreach (string client in members)
+                                            {
+                                                if (ListClient.Keys.Contains(client))
+                                                {
+                                                    Socket ulfriend = ListClient[client].Socket;
+                                                    if (ulfriend != null)
+                                                    {
+                                                        ulfriend.Send(data, recv, SocketFlags.None);
+                                                        AddMessage(file.usernameSender + " to " + file.usernameReceiver + " <group>: " + file.fname);
+                                                    }
+                                                }
 
-                                            string receivedPath = @"E:\document\uploadfile\";
-                                            byte[] clientData = new byte[1024 * 10000];
-                                            int recvdata = Buffer.ByteLength(file.data);
-                                            int fileNameLen = BitConverter.ToInt32(file.data, 0);
+                                            }
+                                            try
+                                            {
 
-                                            BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
-                                            bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
-                                            bWrite.Close();
+                                                string receivedPath = @"E:\document\uploadfile\";
+                                                byte[] clientData = new byte[1024 * 10000];
+                                                int recvdata = Buffer.ByteLength(file.data);
+                                                int fileNameLen = BitConverter.ToInt32(file.data, 0);
+
+                                                BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + file.fname, FileMode.Append));
+                                                bWrite.Write(file.data, 4 + fileNameLen, recvdata - 4 - fileNameLen);
+                                                bWrite.Close();
+                                            }
+                                            catch
+                                            {
+
+                                            }
                                         }
-                                        catch
-                                        {
 
-                                        }
+
                                     }
                                 }
                                 break;
@@ -445,7 +501,8 @@ namespace Server
 
             var listViewItem = new ListViewItem(s);
             lsvMessage.Items.Add(listViewItem);
-
+            txbMessage.Text = "";
+            txbMessage.Focus();
         }
        
 
@@ -471,7 +528,7 @@ namespace Server
             {
                 KeyValuePair<string, ItemClient> item = (KeyValuePair<string, ItemClient>)cbSelectToSend.SelectedItem;
                 Send(item.Value, "MESSAGE");
-                AddMessage("Server to " + item.Key + " >> " + txbMessage.Text);
+                AddMessage("Server to " + item.Key + " : " + txbMessage.Text);
             }
             txbMessage.Clear();
         }

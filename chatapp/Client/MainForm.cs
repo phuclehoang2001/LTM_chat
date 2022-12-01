@@ -40,7 +40,7 @@ namespace Server
         //bug: login more 2 time,
         //send file trong group,
         //click chọn tin nhắn không được mở save file
-        //lay ip tu wifi tren server
+       
         public MainForm(MESSAGE.INITDATA data, Socket socket)
         {
             InitializeComponent();
@@ -131,12 +131,15 @@ namespace Server
             this.listView2.SelectedItems;
             foreach (ListViewItem item in breakfast)
             {
-                folderBrowserDialog1.Description = "Chọn thư mục để lưu file";
-                if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+                if (item.ImageIndex != 0)
                 {
-                    string path = folderBrowserDialog1.SelectedPath + @"\";
-                    DownloadFile(item.Text, path);
-                }
+                    folderBrowserDialog1.Description = "Chọn thư mục để lưu file";
+                    if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+                    {
+                        string path = folderBrowserDialog1.SelectedPath + @"\";
+                        DownloadFile(item.Text, path);
+                    }
+                }  
             }
         }
 
@@ -159,7 +162,7 @@ namespace Server
                         {
                             case "MESSAGE_ALL":
                                 MESSAGE.MESSAGE_ALL mes_all = JsonSerializer.Deserialize<MESSAGE.MESSAGE_ALL>(com.content);
-                                AddMessage(mes_all.UsernameSender + " >> " + mes_all.Content);
+                                AddMessage(mes_all.UsernameSender + " : " + mes_all.Content);
                                 break;
                             case "MESSAGE":
                                 MESSAGE.MESSAGE mes = JsonSerializer.Deserialize<MESSAGE.MESSAGE>(com.content);
@@ -174,7 +177,7 @@ namespace Server
                                 break;
                             case "UploadFile":
                                 MESSAGE.FILE ufile = JsonSerializer.Deserialize<MESSAGE.FILE>(com.content);
-                                AddMessage(ufile.fname);
+                                AddMessage(ufile.fname,1);
                                 break;
                             case "DownLoadFile":
                                 MESSAGE.FILE file = JsonSerializer.Deserialize<MESSAGE.FILE>(com.content);
@@ -264,17 +267,20 @@ namespace Server
             }
         }
 
-        void AddMessage(string s)
+        void AddMessage(string s,int type = 0)
         {
+            //type = 0 : message, type # 0: file
             if (InvokeRequired)
             {
-                try { this.Invoke(new Action<string>(AddMessage), new object[] { s }); }
+                try { this.Invoke(new Action<string,int>(AddMessage), new object[] { s,type }); }
                 catch (Exception) { }
                 return;
             }
 
-            var listViewItem = new ListViewItem(s);
+            var listViewItem = new ListViewItem(s,type);
             listView2.Items.Add(listViewItem);
+            txbMessage.Text = "";
+            txbMessage.Focus();
         }
       
 
@@ -294,7 +300,7 @@ namespace Server
                 string jsonString = JsonSerializer.Serialize(mes);
                 COMMON.COMMON common = new COMMON.COMMON("MESSAGE", jsonString);
                 sendJson(client, common);
-                AddMessage(this.username + " to " + receiver + " >> " + txbMessage.Text);
+                AddMessage(this.username + " to " + receiver + " : " + txbMessage.Text);
             }
             else if (this.groupRecevier != "")
             {
@@ -318,6 +324,7 @@ namespace Server
 
         private void UploadFile(object sender, EventArgs e)
         {
+
             OpenFileDialog ofd = new OpenFileDialog() { Multiselect = true, ValidateNames = true, Filter = "All Files|*.*" };
             ofd.ShowDialog();
 
@@ -333,12 +340,23 @@ namespace Server
             fileNameLen.CopyTo(clientData, 0);
             fileNameByte.CopyTo(clientData, 4);
             fileData.CopyTo(clientData, 4 + fileNameByte.Length);
-            
-            MESSAGE.FILE mes = new MESSAGE.FILE(this.username, this.receiver, fi.FullName, fi.Name, fi.DirectoryName, clientData);
+
+            MESSAGE.FILE mes = null;
+            if (this.receiver != "")
+            {
+                mes = new MESSAGE.FILE(this.username, this.receiver, fi.FullName, fi.Name, fi.DirectoryName, clientData);
+            }
+            else if (this.groupRecevier != "")
+            {
+                mes = new MESSAGE.FILE(this.username, this.groupRecevier, fi.FullName, fi.Name, fi.DirectoryName, clientData);
+            }
             string jsonString = JsonSerializer.Serialize(mes);
             COMMON.COMMON common = new COMMON.COMMON("UploadFile", jsonString);
             sendJson(client, common);
-            AddMessage(fi.Name);
+            if (this.receiver != "")
+            {
+                AddMessage(fi.Name,1);
+            }
         }
 
 
