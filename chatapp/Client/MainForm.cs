@@ -37,9 +37,7 @@ namespace Server
         private Dictionary<string, bool> users;
         private Dictionary<string, List<string>> groups;
         Thread mainThread;
-        //bug: login more 2 time,
-        //send file trong group,
-        //click chọn tin nhắn không được mở save file
+        
        
         public MainForm(MESSAGE.INITDATA data, Socket socket)
         {

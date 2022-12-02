@@ -42,33 +42,24 @@
             this.IPServer = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.button4 = new System.Windows.Forms.Button();
             this.imgIconChat = new System.Windows.Forms.ImageList(this.components);
-            this.button3 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbSelectToSend = new System.Windows.Forms.ComboBox();
             this.txbMessage = new System.Windows.Forms.TextBox();
             this.btnSend = new System.Windows.Forms.Button();
             this.lsvMessage = new System.Windows.Forms.ListView();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.tabControl2 = new System.Windows.Forms.TabControl();
             this.imgIconTabs = new System.Windows.Forms.ImageList(this.components);
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabPage2.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.tabPage3.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.ImageList = this.imgIconTabs;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
@@ -182,7 +173,6 @@
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.panel1);
             this.tabPage2.Controls.Add(this.label2);
             this.tabPage2.Controls.Add(this.cbSelectToSend);
             this.tabPage2.Controls.Add(this.txbMessage);
@@ -197,30 +187,6 @@
             this.tabPage2.Text = "Nhắn tin";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.button4);
-            this.panel1.Controls.Add(this.button3);
-            this.panel1.Controls.Add(this.button2);
-            this.panel1.Location = new System.Drawing.Point(227, 459);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(203, 50);
-            this.panel1.TabIndex = 11;
-            // 
-            // button4
-            // 
-            this.button4.AutoEllipsis = true;
-            this.button4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.button4.FlatAppearance.BorderSize = 0;
-            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button4.ImageIndex = 2;
-            this.button4.ImageList = this.imgIconChat;
-            this.button4.Location = new System.Drawing.Point(152, 3);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(48, 44);
-            this.button4.TabIndex = 2;
-            this.button4.UseVisualStyleBackColor = true;
-            // 
             // imgIconChat
             // 
             this.imgIconChat.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgIconChat.ImageStream")));
@@ -229,34 +195,6 @@
             this.imgIconChat.Images.SetKeyName(1, "picture.png");
             this.imgIconChat.Images.SetKeyName(2, "happiness.png");
             this.imgIconChat.Images.SetKeyName(3, "send-message.png");
-            // 
-            // button3
-            // 
-            this.button3.AutoEllipsis = true;
-            this.button3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.button3.FlatAppearance.BorderSize = 0;
-            this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button3.ImageIndex = 1;
-            this.button3.ImageList = this.imgIconChat;
-            this.button3.Location = new System.Drawing.Point(77, 3);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(48, 44);
-            this.button3.TabIndex = 1;
-            this.button3.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            this.button2.AutoEllipsis = true;
-            this.button2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.button2.FlatAppearance.BorderSize = 0;
-            this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button2.ImageIndex = 0;
-            this.button2.ImageList = this.imgIconChat;
-            this.button2.Location = new System.Drawing.Point(3, 3);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(48, 44);
-            this.button2.TabIndex = 0;
-            this.button2.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
@@ -284,10 +222,10 @@
             this.txbMessage.AcceptsReturn = true;
             this.txbMessage.AcceptsTab = true;
             this.txbMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txbMessage.Location = new System.Drawing.Point(450, 459);
+            this.txbMessage.Location = new System.Drawing.Point(248, 459);
             this.txbMessage.Multiline = true;
             this.txbMessage.Name = "txbMessage";
-            this.txbMessage.Size = new System.Drawing.Size(423, 50);
+            this.txbMessage.Size = new System.Drawing.Size(625, 50);
             this.txbMessage.TabIndex = 7;
             // 
             // btnSend
@@ -315,28 +253,6 @@
             this.lsvMessage.UseCompatibleStateImageBehavior = false;
             this.lsvMessage.View = System.Windows.Forms.View.List;
             // 
-            // tabPage3
-            // 
-            this.tabPage3.Controls.Add(this.tabControl2);
-            this.tabPage3.ImageIndex = 2;
-            this.tabPage3.Location = new System.Drawing.Point(4, 31);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(986, 539);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Nhóm";
-            this.tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // tabControl2
-            // 
-            this.tabControl2.Alignment = System.Windows.Forms.TabAlignment.Left;
-            this.tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl2.Location = new System.Drawing.Point(0, 0);
-            this.tabControl2.Multiline = true;
-            this.tabControl2.Name = "tabControl2";
-            this.tabControl2.SelectedIndex = 0;
-            this.tabControl2.Size = new System.Drawing.Size(986, 539);
-            this.tabControl2.TabIndex = 2;
-            // 
             // imgIconTabs
             // 
             this.imgIconTabs.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgIconTabs.ImageStream")));
@@ -362,8 +278,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.tabPage3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -373,8 +287,6 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.TabControl tabControl2;
         private System.Windows.Forms.TextBox IPServer;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cbSelectToSend;
@@ -382,10 +294,6 @@
         private System.Windows.Forms.TextBox txbMessage;
         private System.Windows.Forms.ListView lsvMessage;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button3;
         private System.Windows.Forms.TextBox PortServer;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ImageList imgIconChat;

@@ -14,11 +14,17 @@ namespace COMMON
             this.kind = kind;
             this.content = content;
         }
+
+        public COMMON()
+        {
+
+        }
         public string kind { get; set; }
         public string content { get; set; }
         public string LOGIN = "LOGIN";
         public string REPLY = "REPLY";
         public string LOGOUT = "LOGOUT";
+        public string REGISTER = "REGISTER";
         /*kind:
          * LOGIN: username, pass
          * MESSAGE_ALL: sender, content

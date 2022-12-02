@@ -38,6 +38,8 @@ namespace Server
             InitializeComponent();
         }
 
+       
+
         private void CreateUsers()
         {
             ListAccount = new Dictionary<string, string>();
@@ -52,6 +54,7 @@ namespace Server
                 ListAccount.ElementAt(2).Key,
                 ListAccount.ElementAt(3).Key,
             });
+
         }
         // Thiết lập ip từ máy chủ hiện tại khi load form
         private void server_multifunction_Load(object sender, EventArgs e)
@@ -143,9 +146,7 @@ namespace Server
             client.Send(jsonUtf8Bytes, jsonUtf8Bytes.Length, SocketFlags.None);
         }
 
-
-
-        //nhận tin
+      
         void ThreadReceive(object obj)
         {
             bool active = false;
@@ -181,7 +182,7 @@ namespace Server
                                             ClientImg = Resources.programmer,
                                             Status = true
                                         };
-                                        
+
                                         // Hàm invoke dùng để thay đổi control vào UI trong 1 thread
                                         flpUsers.Invoke((MethodInvoker)(() => flpUsers.Controls.Add(client)));
                                         // thêm vào list
@@ -193,7 +194,7 @@ namespace Server
 
 
                                         //// transfer data to client ListAccount.Keys.ToList();
-                                        Dictionary<string, bool> userInit = new Dictionary<string,bool>();
+                                        Dictionary<string, bool> userInit = new Dictionary<string, bool>();
                                         foreach (KeyValuePair<string, string> item in ListAccount)
                                         {
                                             bool onlineStatus = false;
@@ -218,7 +219,7 @@ namespace Server
                                         sendJson(socket, com);
 
                                         // trang thai online
-                                        MESSAGE.ONLINE online = new ONLINE(login.username,true);
+                                        MESSAGE.ONLINE online = new ONLINE(login.username, true);
                                         string jsonOnline = JsonSerializer.Serialize(online);
                                         com = new COMMON.COMMON("ONLINE", jsonOnline);
                                         foreach (KeyValuePair<string, ItemClient> item in ListClient)
@@ -235,7 +236,6 @@ namespace Server
                                     {
                                         com = new COMMON.COMMON("LOGIN_RESULT", "FAILED");
                                         sendJson(socket, com);
-                                        return;
                                     }
                                     break;
                                 case "REGISTER":
@@ -257,7 +257,6 @@ namespace Server
                                                 {
                                                     Socket friend = item.Value.Socket;
                                                     sendJson(friend, com);
-
                                                 }
                                             }
                                         }
@@ -275,7 +274,6 @@ namespace Server
                         {
                             com = new COMMON.COMMON("REPLY", "CANCEL");
                             sendJson(socket, com);
-                            return;
                         }
                     }
 
